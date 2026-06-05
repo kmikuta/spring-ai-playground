@@ -1,18 +1,21 @@
 package io.github.kmikuta.api;
 
-import static org.springframework.ai.chat.memory.ChatMemory.CONVERSATION_ID;
-
 import io.github.kmikuta.tools.DateTimeTools;
 import io.github.kmikuta.tools.WeatherTools;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.ai.mcp.SyncMcpToolCallbackProvider;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.time.LocalDateTime;
+
+import static org.springframework.ai.chat.memory.ChatMemory.CONVERSATION_ID;
 
 @RestController
 @RequestMapping("/api/chat")
@@ -21,16 +24,19 @@ class ChatController {
   private final ChatMemory chatMemory;
   private final DateTimeTools dateTimeTools;
   private final WeatherTools weatherTools;
+  private final SyncMcpToolCallbackProvider toolCallbackProvider;
 
   ChatController(
-      ChatModel chatModel,
-      ChatMemory chatMemory,
-      DateTimeTools dateTimeTools,
-      WeatherTools weatherTools) {
+          ChatModel chatModel,
+          ChatMemory chatMemory,
+          DateTimeTools dateTimeTools,
+          WeatherTools weatherTools,
+          SyncMcpToolCallbackProvider toolCallbackProvider) {
     this.chatModel = chatModel;
     this.chatMemory = chatMemory;
     this.dateTimeTools = dateTimeTools;
     this.weatherTools = weatherTools;
+    this.toolCallbackProvider = toolCallbackProvider;
   }
 
   @GetMapping("/simple")
@@ -61,6 +67,16 @@ class ChatController {
         .tools(dateTimeTools, weatherTools)
         .call()
         .entity(Response.class);
+  }
+
+  @GetMapping("/mcp")
+  Response chatWithMcpTools() {
+    var prompt = "Generate report for " + LocalDateTime.now();
+    return ChatClient.create(chatModel)
+            .prompt(prompt)
+            .tools(t -> t.callbacks(toolCallbackProvider))
+            .call()
+            .entity(Response.class);
   }
 
   record Response(String message) {}

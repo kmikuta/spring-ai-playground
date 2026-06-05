@@ -1,9 +1,11 @@
 spring:
   application:
-    name: spring-ai-web
+    name: spring-ai-mcp
   ai:
-    anthropic:
-      api-key: ${ANTHROPIC_API_KEY}
-      chat:
-        options:
-          model: claude-sonnet-4-5
+    mcp:
+      server:
+        name: Spring AI Playground MCP
+        protocol: STREAMABLE
+
+server:
+  port: 8081

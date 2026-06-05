@@ -1,4 +1,11 @@
-import static org.junit.jupiter.api.Assertions.*;
+package io.github.kmikuta.mcp;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+
+@SpringBootTest
 class ApplicationContextTest {
-  
+
+  @Test
+  void contextLoads() {}
 }
