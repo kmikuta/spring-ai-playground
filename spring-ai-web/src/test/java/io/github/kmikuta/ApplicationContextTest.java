@@ -1,10 +1,10 @@
-package io.github.kmikuta.playground;
+package io.github.kmikuta;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class SpringAiPlaygroundApplicationTests {
+class ApplicationContextTest {
 
   @Test
   void contextLoads() {}
