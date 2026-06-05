@@ -12,6 +12,10 @@ subprojects {
 	group = 'io.github.kmikuta'
 	version = '0.0.1-SNAPSHOT'
 
+	ext {
+		set('springAiVersion', "2.0.0-M8")
+	}
+
 	java {
 		toolchain {
 			languageVersion = JavaLanguageVersion.of(25)
@@ -20,6 +24,12 @@ subprojects {
 
 	repositories {
 		mavenCentral()
+	}
+
+	dependencyManagement {
+		imports {
+			mavenBom "org.springframework.ai:spring-ai-bom:${springAiVersion}"
+		}
 	}
 
 	tasks.named('test') {
