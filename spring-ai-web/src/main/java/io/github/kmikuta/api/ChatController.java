@@ -1,37 +1,67 @@
 package io.github.kmikuta.api;
 
-import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.*;
-
 import static org.springframework.ai.chat.memory.ChatMemory.CONVERSATION_ID;
+
+import io.github.kmikuta.tools.DateTimeTools;
+import io.github.kmikuta.tools.WeatherTools;
+import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
+import org.springframework.ai.chat.memory.ChatMemory;
+import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/chat")
 class ChatController {
+  private final ChatModel chatModel;
+  private final ChatMemory chatMemory;
+  private final DateTimeTools dateTimeTools;
+  private final WeatherTools weatherTools;
 
-  private final ChatClient simpleChat;
-
-  private final ChatClient memoryChat;
-
-  ChatController(@Qualifier("simple") ChatClient simpleChat, @Qualifier("memory") ChatClient memoryChat) {
-    this.simpleChat = simpleChat;
-    this.memoryChat = memoryChat;
+  ChatController(
+      ChatModel chatModel,
+      ChatMemory chatMemory,
+      DateTimeTools dateTimeTools,
+      WeatherTools weatherTools) {
+    this.chatModel = chatModel;
+    this.chatMemory = chatMemory;
+    this.dateTimeTools = dateTimeTools;
+    this.weatherTools = weatherTools;
   }
 
-  @GetMapping(value = "/simple", produces = MediaType.APPLICATION_JSON_VALUE)
-  Hello simpleChat(@RequestParam(name = "message") String message) {
-    return simpleChat.prompt(message).call().entity(Hello.class);
+  @GetMapping("/simple")
+  Response simpleChat(@RequestParam(name = "message") String message) {
+    return ChatClient.create(chatModel).prompt(message).call().entity(Response.class);
   }
 
-  @GetMapping(value = "/memory/{conversationId}", produces = MediaType.APPLICATION_JSON_VALUE)
-  Hello chatWithMemory(@PathVariable String conversationId, @RequestParam(name = "message") String message) {
-    return memoryChat.prompt(message)
-            .advisors(a -> a.param(CONVERSATION_ID, conversationId))
-            .call()
-            .entity(Hello.class);
+  @GetMapping("/memory/{conversationId}")
+  Response chatWithMemory(
+      @PathVariable String conversationId, @RequestParam(name = "message") String message) {
+    ChatClient chatClient =
+        ChatClient.builder(chatModel)
+            .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
+            .build();
+
+    return chatClient
+        .prompt()
+        .user(message)
+        .advisors(a -> a.param(CONVERSATION_ID, conversationId))
+        .call()
+        .entity(Response.class);
   }
 
-  record Hello(String message) {}
+  @GetMapping("/tools")
+  Response chatWithTools(@RequestParam(name = "message") String message) {
+    return ChatClient.create(chatModel)
+        .prompt(message)
+        .tools(dateTimeTools, weatherTools)
+        .call()
+        .entity(Response.class);
+  }
+
+  record Response(String message) {}
 }
