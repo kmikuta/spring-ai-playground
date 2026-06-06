@@ -1,7 +1,10 @@
 package io.github.kmikuta.api;
 
+import static org.springframework.ai.chat.memory.ChatMemory.CONVERSATION_ID;
+
 import io.github.kmikuta.tools.DateTimeTools;
 import io.github.kmikuta.tools.WeatherTools;
+import java.time.LocalDateTime;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
@@ -13,10 +16,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.time.LocalDateTime;
-
-import static org.springframework.ai.chat.memory.ChatMemory.CONVERSATION_ID;
-
 @RestController
 @RequestMapping("/api/chat")
 class ChatController {
@@ -27,11 +26,11 @@ class ChatController {
   private final SyncMcpToolCallbackProvider toolCallbackProvider;
 
   ChatController(
-          ChatModel chatModel,
-          ChatMemory chatMemory,
-          DateTimeTools dateTimeTools,
-          WeatherTools weatherTools,
-          SyncMcpToolCallbackProvider toolCallbackProvider) {
+      ChatModel chatModel,
+      ChatMemory chatMemory,
+      DateTimeTools dateTimeTools,
+      WeatherTools weatherTools,
+      SyncMcpToolCallbackProvider toolCallbackProvider) {
     this.chatModel = chatModel;
     this.chatMemory = chatMemory;
     this.dateTimeTools = dateTimeTools;
@@ -73,10 +72,10 @@ class ChatController {
   Response chatWithMcpTools() {
     var prompt = "Generate report for " + LocalDateTime.now();
     return ChatClient.create(chatModel)
-            .prompt(prompt)
-            .tools(t -> t.callbacks(toolCallbackProvider))
-            .call()
-            .entity(Response.class);
+        .prompt(prompt)
+        .tools(t -> t.callbacks(toolCallbackProvider))
+        .call()
+        .entity(Response.class);
   }
 
   record Response(String message) {}
