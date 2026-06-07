@@ -42,15 +42,15 @@ class ChatController {
     this.toolCallbackProvider = toolCallbackProvider;
   }
 
-  /* Example: GET /api/chat/simple?message=Hello */
+  /** Example: GET /api/chat/simple?message=Hello */
   @GetMapping("/simple")
   Response simpleChat(@RequestParam(name = "message") String message) {
     return ChatClient.create(chatModel).prompt(message).call().entity(Response.class);
   }
 
-  /*
-   * Example: GET /api/chat/memory/session-123?message=What is the capital of France?
-   * Follow-up: GET /api/chat/memory/session-123?message=What did I just ask about?
+  /**
+   * Example: GET /api/chat/memory/session-123?message=What is the capital of France? Follow-up: GET
+   * /api/chat/memory/session-123?message=What did I just ask about?
    */
   @GetMapping("/memory/{conversationId}")
   Response chatWithMemory(
@@ -68,7 +68,7 @@ class ChatController {
         .entity(Response.class);
   }
 
-  /* Example: GET /api/chat/tools?message=What is the weather and air quality in Warsaw today? */
+  /** Example: GET /api/chat/tools?message=What is the weather and air quality in Warsaw today? */
   @GetMapping("/tools")
   Response chatWithTools(@RequestParam(name = "message") String message) {
     return ChatClient.create(chatModel)
@@ -78,7 +78,7 @@ class ChatController {
         .entity(Response.class);
   }
 
-  /* Example: GET /api/chat/mcp?content=Q1 sales reached 1M with 20% growth */
+  /** Example: GET /api/chat/mcp?content=Q1 sales reached 1M with 20% growth */
   @GetMapping("/mcp")
   Response chatWithMcpTools(@RequestParam(name = "content") String content) {
     if (toolCallbackProvider.isEmpty()) {
