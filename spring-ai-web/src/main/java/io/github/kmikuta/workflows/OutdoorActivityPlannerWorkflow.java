@@ -59,32 +59,11 @@ public class OutdoorActivityPlannerWorkflow {
   public String execute(String city) {
     ExecutorService executor = Executors.newFixedThreadPool(2);
     try {
-      CompletableFuture<String> temperatureFuture =
-          CompletableFuture.supplyAsync(
-              () ->
-                  ChatClient.builder(chatModel)
-                      .build()
-                      .prompt(TEMPERATURE_PROMPT + "\nInput: " + city)
-                      .tools(weatherTools)
-                      .call()
-                      .content(),
-              executor);
-
-      CompletableFuture<String> airQualityFuture =
-          CompletableFuture.supplyAsync(
-              () ->
-                  ChatClient.builder(chatModel)
-                      .build()
-                      .prompt(AIR_QUALITY_PROMPT + "\nInput: " + city)
-                      .tools(airQualityTools)
-                      .call()
-                      .content(),
-              executor);
-
+      CompletableFuture<String> temperatureFuture = fetchTemperature(city, executor);
+      CompletableFuture<String> airQualityFuture = fetchAirQuality(city, executor);
       CompletableFuture.allOf(temperatureFuture, airQualityFuture).join();
 
-      String conditions =
-          "Temperature: " + temperatureFuture.join() + "\nAir Quality: " + airQualityFuture.join();
+      String conditions = buildConditions(temperatureFuture.join(), airQualityFuture.join());
 
       return ChatClient.builder(chatModel)
           .build()
@@ -94,5 +73,33 @@ public class OutdoorActivityPlannerWorkflow {
     } finally {
       executor.shutdown();
     }
+  }
+
+  private String buildConditions(String temperature, String airQuality) {
+    return "Temperature: " + temperature + "\nAir Quality: " + airQuality;
+  }
+
+  private CompletableFuture<String> fetchTemperature(String city, ExecutorService executor) {
+    return CompletableFuture.supplyAsync(
+        () ->
+            ChatClient.builder(chatModel)
+                .build()
+                .prompt(TEMPERATURE_PROMPT + "\nInput: " + city)
+                .tools(weatherTools)
+                .call()
+                .content(),
+        executor);
+  }
+
+  private CompletableFuture<String> fetchAirQuality(String city, ExecutorService executor) {
+    return CompletableFuture.supplyAsync(
+        () ->
+            ChatClient.builder(chatModel)
+                .build()
+                .prompt(AIR_QUALITY_PROMPT + "\nInput: " + city)
+                .tools(airQualityTools)
+                .call()
+                .content(),
+        executor);
   }
 }
