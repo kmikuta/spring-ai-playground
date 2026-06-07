@@ -4,7 +4,6 @@ import static org.springframework.ai.chat.memory.ChatMemory.CONVERSATION_ID;
 
 import io.github.kmikuta.tools.DateTimeTools;
 import io.github.kmikuta.tools.WeatherTools;
-import java.time.LocalDateTime;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
@@ -69,8 +68,8 @@ class ChatController {
   }
 
   @GetMapping("/mcp")
-  Response chatWithMcpTools() {
-    var prompt = "Generate report for " + LocalDateTime.now();
+  Response chatWithMcpTools(@RequestParam(name = "content") String content) {
+    var prompt = "Generate a report with the following content: " + content;
     return ChatClient.create(chatModel)
         .prompt(prompt)
         .tools(t -> t.callbacks(toolCallbackProvider))

@@ -6,19 +6,21 @@ import org.springframework.ai.mcp.annotation.McpTool;
 import org.springframework.ai.mcp.annotation.McpToolParam;
 import org.springframework.stereotype.Component;
 
-import java.util.UUID;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 @Component
 class ReportTools {
   private static final Logger LOGGER = LoggerFactory.getLogger(ReportTools.class);
 
   @McpTool(name = "generateReport", description = "Generates a report")
-  public Report generate(@McpToolParam(description = "Date of the report") String date) {
-    LOGGER.info("Using tool: ReportTools::generate for date: {}", date);
-    return new Report(date, UUID.randomUUID(), Status.SUCCESS);
+  public Report generate(@McpToolParam(description = "Content of the report") String content) {
+    LOGGER.info("Using tool: ReportTools::generate for content: {}", content);
+    var date = LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy"));
+    return new Report(content, date, Status.SUCCESS);
   }
 
-  record Report(String date, UUID id, Status status) {}
+  record Report(String content, String date, Status status) {}
 
   enum Status {
     SUCCESS,
