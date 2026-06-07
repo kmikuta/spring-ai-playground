@@ -21,11 +21,13 @@ class WorkflowController {
     this.outdoorActivityPlannerWorkflow = outdoorActivityPlannerWorkflow;
   }
 
+  /* Example: GET /api/workflows/location?place=Tokyo */
   @GetMapping("/location")
   String locationInfo(@RequestParam(name = "place") String place) {
     return locationInfoWorkflow.execute(place);
   }
 
+  /* Example: GET /api/workflows/outdoor-activities?city=Warsaw */
   @GetMapping("/outdoor-activities")
   String outdoorActivities(@RequestParam(name = "city") String city) {
     return outdoorActivityPlannerWorkflow.execute(city);
