@@ -37,7 +37,7 @@ The web module requires `ANTHROPIC_API_KEY` set in the environment. Model: `clau
 
 ## Code Style
 
-Spotless enforces Google Java Format. Run before committing:
+Spotless enforces Google Java Format. It runs automatically via a git pre-commit hook — no manual step needed. To apply manually:
 
 ```bash
 ./gradlew spotlessApply

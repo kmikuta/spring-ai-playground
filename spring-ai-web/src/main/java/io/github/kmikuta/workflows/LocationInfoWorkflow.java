@@ -3,48 +3,68 @@ package io.github.kmikuta.workflows;
 import io.github.kmikuta.tools.AirQualityTools;
 import io.github.kmikuta.tools.DateTimeTools;
 import io.github.kmikuta.tools.WeatherTools;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.stereotype.Component;
 
+/**
+ * Implements the Chain Workflow agentic pattern.
+ *
+ * @see <a href="https://spring.io/blog/2025/01/21/spring-ai-agentic-patterns">Spring AI Agentic
+ *     Patterns</a>
+ * @see <a href="https://www.anthropic.com/research/building-effective-agents">Building Effective
+ *     Agents</a>
+ */
 @Component
 public class LocationInfoWorkflow {
+  private static final Logger LOGGER = LoggerFactory.getLogger(LocationInfoWorkflow.class);
 
-  private static final String SYSTEM_PROMPT =
-      """
-      You are a helpful assistant that provides information about locations.
-      When given a place name, you MUST:
-      1. Call the getCurrentDateTime tool with the city name to get the current local date and time.
-      2. Call the getCurrentTemperature tool with the city name to get the current temperature in Celsius.
-      3. Call the getCurrentAirQuality tool with the city name to get the current European AQI.
-      4. Return a concise summary including the place name, current local time, temperature, and air quality.
-      Always call all three tools before responding.
-      """;
+  private static final String[] SYSTEM_PROMPTS = {
+    /* Step 1: retrieve local date and time for the location */
+    """
+    For given location, call the getCurrentDateTime tool to get the current local date and time.
+    Respond in the following format: 'Location: Warsaw | DateTime: 07.06.2026'
+    """,
+    /* Step 2: retrieve current temperature */
+    """
+    For given location, call the getCurrentTemperature tool to get the current temperature in Celsius.
+    Respond in the following format: 'Location: Warsaw | DateTime: 07.06.2026 | Temperature: 25°C'
+    """,
+    /* Step 3: retrieve current air quality */
+    """
+    For given location, call the getCurrentAirQuality tool to get the current European AQI.
+    Respond in the following format: 'Location: Warsaw | DateTime: 07.06.2026 | Temperature: 25°C | Air Quality (AQI): 40'
+    """,
+    /* Step 4: format the final summary */
+    """
+    For given location, date/time, temperature, and air quality, format a concise readable summary.
+    """
+  };
 
-  private final ChatModel chatModel;
-  private final DateTimeTools dateTimeTools;
-  private final WeatherTools weatherTools;
-  private final AirQualityTools airQualityTools;
+  private final ChatClient chatClient;
 
   public LocationInfoWorkflow(
       ChatModel chatModel,
       DateTimeTools dateTimeTools,
       WeatherTools weatherTools,
       AirQualityTools airQualityTools) {
-    this.chatModel = chatModel;
-    this.dateTimeTools = dateTimeTools;
-    this.weatherTools = weatherTools;
-    this.airQualityTools = airQualityTools;
+    this.chatClient =
+        ChatClient.builder(chatModel)
+            .defaultTools(dateTimeTools, weatherTools, airQualityTools)
+            .build();
   }
 
   public String execute(String place) {
-    return ChatClient.builder(chatModel)
-        .defaultSystem(SYSTEM_PROMPT)
-        .build()
-        .prompt()
-        .user(place)
-        .tools(dateTimeTools, weatherTools, airQualityTools)
-        .call()
-        .content();
+    String response = String.format("Location: %s", place);
+
+    for (String prompt : SYSTEM_PROMPTS) {
+      String input = String.format("{%s}\n\n{%s}", response, prompt);
+      LOGGER.info("Accumulated response: {}", response);
+      response = chatClient.prompt(input).call().content();
+    }
+
+    return response;
   }
 }
