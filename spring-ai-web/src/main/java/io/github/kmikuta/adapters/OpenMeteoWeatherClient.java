@@ -39,6 +39,28 @@ public class OpenMeteoWeatherClient implements WeatherClient {
     return location != null ? location.timezone() : null;
   }
 
+  @Override
+  public Integer getCurrentAirQuality(String city) {
+    GeocodingResult location = geocode(city);
+    if (location == null) {
+      return null;
+    }
+
+    AirQualityResponse airQuality =
+        restClient
+            .get()
+            .uri(
+                "https://air-quality-api.open-meteo.com/v1/air-quality?latitude={lat}&longitude={lon}&current=european_aqi",
+                location.latitude(),
+                location.longitude())
+            .retrieve()
+            .body(AirQualityResponse.class);
+
+    return airQuality != null && airQuality.current() != null
+        ? airQuality.current().european_aqi()
+        : null;
+  }
+
   private GeocodingResult geocode(String city) {
     return geocodingCache.computeIfAbsent(
         city.toLowerCase(),
@@ -68,4 +90,8 @@ public class OpenMeteoWeatherClient implements WeatherClient {
   private record WeatherResponse(CurrentWeather current) {}
 
   private record CurrentWeather(double temperature_2m) {}
+
+  private record AirQualityResponse(CurrentAirQuality current) {}
+
+  private record CurrentAirQuality(int european_aqi) {}
 }

@@ -2,6 +2,7 @@ package io.github.kmikuta.api;
 
 import static org.springframework.ai.chat.memory.ChatMemory.CONVERSATION_ID;
 
+import io.github.kmikuta.tools.AirQualityTools;
 import io.github.kmikuta.tools.DateTimeTools;
 import io.github.kmikuta.tools.WeatherTools;
 import org.springframework.ai.chat.client.ChatClient;
@@ -22,6 +23,7 @@ class ChatController {
   private final ChatMemory chatMemory;
   private final DateTimeTools dateTimeTools;
   private final WeatherTools weatherTools;
+  private final AirQualityTools airQualityTools;
   private final SyncMcpToolCallbackProvider toolCallbackProvider;
 
   ChatController(
@@ -29,11 +31,13 @@ class ChatController {
       ChatMemory chatMemory,
       DateTimeTools dateTimeTools,
       WeatherTools weatherTools,
+      AirQualityTools airQualityTools,
       SyncMcpToolCallbackProvider toolCallbackProvider) {
     this.chatModel = chatModel;
     this.chatMemory = chatMemory;
     this.dateTimeTools = dateTimeTools;
     this.weatherTools = weatherTools;
+    this.airQualityTools = airQualityTools;
     this.toolCallbackProvider = toolCallbackProvider;
   }
 
@@ -62,7 +66,7 @@ class ChatController {
   Response chatWithTools(@RequestParam(name = "message") String message) {
     return ChatClient.create(chatModel)
         .prompt(message)
-        .tools(dateTimeTools, weatherTools)
+        .tools(dateTimeTools, weatherTools, airQualityTools)
         .call()
         .entity(Response.class);
   }

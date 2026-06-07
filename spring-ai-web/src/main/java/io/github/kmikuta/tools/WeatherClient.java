@@ -5,4 +5,6 @@ public interface WeatherClient {
   Double getCurrentTemperature(String city);
 
   String getTimezone(String city);
+
+  Integer getCurrentAirQuality(String city);
 }
