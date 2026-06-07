@@ -49,7 +49,7 @@ class McpServerIntegrationTest {
     // given
     var request =
         McpSchema.CallToolRequest.builder("generateReport")
-            .arguments(Map.of("date", "2026-06-05"))
+            .arguments(Map.of("content", "Any content..."))
             .build();
 
     // when
@@ -57,6 +57,8 @@ class McpServerIntegrationTest {
 
     // then
     assertThat(result.isError()).isFalse();
-    assertThat(result.content()).isNotEmpty();
+    assertThat(result.content())
+        .extracting(c -> ((McpSchema.TextContent) c).text())
+        .anyMatch(text -> text.contains("Any content..."));
   }
 }

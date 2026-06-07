@@ -5,6 +5,7 @@ import static org.springframework.ai.chat.memory.ChatMemory.CONVERSATION_ID;
 import io.github.kmikuta.tools.AirQualityTools;
 import io.github.kmikuta.tools.DateTimeTools;
 import io.github.kmikuta.tools.WeatherTools;
+import java.util.Optional;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
@@ -24,7 +25,7 @@ class ChatController {
   private final DateTimeTools dateTimeTools;
   private final WeatherTools weatherTools;
   private final AirQualityTools airQualityTools;
-  private final SyncMcpToolCallbackProvider toolCallbackProvider;
+  private final Optional<SyncMcpToolCallbackProvider> toolCallbackProvider;
 
   ChatController(
       ChatModel chatModel,
@@ -32,7 +33,7 @@ class ChatController {
       DateTimeTools dateTimeTools,
       WeatherTools weatherTools,
       AirQualityTools airQualityTools,
-      SyncMcpToolCallbackProvider toolCallbackProvider) {
+      Optional<SyncMcpToolCallbackProvider> toolCallbackProvider) {
     this.chatModel = chatModel;
     this.chatMemory = chatMemory;
     this.dateTimeTools = dateTimeTools;
@@ -80,10 +81,13 @@ class ChatController {
   /* Example: GET /api/chat/mcp?content=Q1 sales reached 1M with 20% growth */
   @GetMapping("/mcp")
   Response chatWithMcpTools(@RequestParam(name = "content") String content) {
+    if (toolCallbackProvider.isEmpty()) {
+      return new Response("MCP tools are not available — start the MCP server and restart.");
+    }
     var prompt = "Generate a report with the following content: " + content;
     return ChatClient.create(chatModel)
         .prompt(prompt)
-        .tools(t -> t.callbacks(toolCallbackProvider))
+        .tools(t -> t.callbacks(toolCallbackProvider.get()))
         .call()
         .entity(Response.class);
   }
