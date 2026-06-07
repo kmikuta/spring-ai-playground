@@ -12,10 +12,22 @@ import org.springframework.stereotype.Service;
 public class DateTimeTools {
   private static final Logger LOGGER = LoggerFactory.getLogger(DateTimeTools.class);
 
-  @Tool(description = "Get the current date and time in the given timezone")
+  private final WeatherClient weatherClient;
+
+  public DateTimeTools(WeatherClient weatherClient) {
+    this.weatherClient = weatherClient;
+  }
+
+  @Tool(description = "Get the current date and time for a given city")
   public String getCurrentDateTime(
-      @ToolParam(description = "Timezone id e.g. Europe/Warsaw") String zoneId) {
-    LOGGER.info("Using tool: DateTimeTools::getCurrentDateTime for timezone: {}", zoneId);
-    return LocalDateTime.now(ZoneId.of(zoneId)).toString();
+      @ToolParam(description = "City name e.g. Warsaw, Tokyo, London") String city) {
+    LOGGER.info("Using tool: DateTimeTools::getCurrentDateTime for city: {}", city);
+
+    String timezone = weatherClient.getTimezone(city);
+    if (timezone == null) {
+      return "Timezone not found for city: " + city;
+    }
+
+    return LocalDateTime.now(ZoneId.of(timezone)).toString();
   }
 }

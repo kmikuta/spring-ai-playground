@@ -12,9 +12,12 @@ Built with Spring Boot 4 and Anthropic Claude.
 ## Getting started
 
 ```bash
-# 1. Start the MCP tool server
+# 1. Configure shared git hooks (one-time setup)
+git config core.hooksPath .githooks
+
+# 2. Start the MCP tool server
 ./gradlew :spring-ai-mcp:bootRun
 
-# 2. Start the web client (in a separate terminal)
+# 3. Start the web client (in a separate terminal)
 ANTHROPIC_API_KEY=<your-key> ./gradlew :spring-ai-web:bootRun
 ```

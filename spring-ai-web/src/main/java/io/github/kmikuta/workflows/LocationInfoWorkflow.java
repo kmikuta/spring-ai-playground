@@ -13,10 +13,9 @@ public class LocationInfoWorkflow {
       """
       You are a helpful assistant that provides information about locations.
       When given a place name, you MUST:
-      1. Determine the IANA timezone ID for that place (e.g., "Europe/Warsaw" for Warsaw).
-      2. Call the getCurrentDateTime tool to get the current local date and time.
-      3. Call the getCurrentTemperature tool to get the current temperature in Celsius.
-      4. Return a concise summary including the place name, current local time, and temperature.
+      1. Call the getCurrentDateTime tool with the city name to get the current local date and time.
+      2. Call the getCurrentTemperature tool with the city name to get the current temperature in Celsius.
+      3. Return a concise summary including the place name, current local time, and temperature.
       Always call both tools before responding.
       """;
 

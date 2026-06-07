@@ -16,15 +16,13 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class McpServerIntegrationTest {
 
-  @LocalServerPort
-  private int port;
+  @LocalServerPort private int port;
 
   private McpSyncClient mcpClient;
 
   @BeforeEach
   void setUp() {
-    var transport =
-        HttpClientStreamableHttpTransport.builder("http://localhost:" + port).build();
+    var transport = HttpClientStreamableHttpTransport.builder("http://localhost:" + port).build();
     mcpClient =
         McpClient.sync(transport)
             .clientInfo(McpSchema.Implementation.builder("test-client", "1.0").build())
@@ -43,9 +41,7 @@ class McpServerIntegrationTest {
     var tools = mcpClient.listTools();
 
     // then
-    assertThat(tools.tools())
-        .extracting(McpSchema.Tool::name)
-        .contains("generateReport");
+    assertThat(tools.tools()).extracting(McpSchema.Tool::name).contains("generateReport");
   }
 
   @Test
