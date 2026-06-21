@@ -3,6 +3,9 @@ package io.github.kmikuta.workflows;
 import io.github.kmikuta.tools.AirQualityTools;
 import io.github.kmikuta.tools.DateTimeTools;
 import io.github.kmikuta.tools.WeatherTools;
+import io.github.kmikuta.utils.ModelCallObserver;
+import io.github.kmikuta.workflows.patterns.ChainWorkflow;
+import java.util.Arrays;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
@@ -57,14 +60,11 @@ public class LocationInfoWorkflow {
   }
 
   public String execute(String place) {
-    String response = String.format("Location: %s", place);
+    ModelCallObserver callObserver = new ModelCallObserver();
+    callObserver.addObserver((response) -> LOGGER.info("Accumulated response: {}", response));
 
-    for (String prompt : SYSTEM_PROMPTS) {
-      String input = String.format("{%s}\n\n{%s}", response, prompt);
-      LOGGER.info("Accumulated response: {}", response);
-      response = chatClient.prompt(input).call().content();
-    }
-
-    return response;
+    ChainWorkflow workflow =
+        new ChainWorkflow(chatClient, Arrays.asList(SYSTEM_PROMPTS), callObserver);
+    return workflow.chain("Location: " + place);
   }
 }

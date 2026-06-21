@@ -4,10 +4,10 @@ import io.github.kmikuta.tools.WeatherClient;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
-@Service
+@Component
 public class OpenMeteoWeatherClient implements WeatherClient {
 
   private final RestClient restClient = RestClient.create();

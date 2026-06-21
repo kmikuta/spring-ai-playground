@@ -5,7 +5,9 @@ import static org.springframework.ai.chat.memory.ChatMemory.CONVERSATION_ID;
 import io.github.kmikuta.tools.AirQualityTools;
 import io.github.kmikuta.tools.DateTimeTools;
 import io.github.kmikuta.tools.WeatherTools;
-import java.util.Optional;
+import io.modelcontextprotocol.client.McpSyncClient;
+import io.swagger.v3.oas.annotations.Operation;
+import java.util.List;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
@@ -25,7 +27,7 @@ class ChatController {
   private final DateTimeTools dateTimeTools;
   private final WeatherTools weatherTools;
   private final AirQualityTools airQualityTools;
-  private final Optional<SyncMcpToolCallbackProvider> toolCallbackProvider;
+  private final List<McpSyncClient> mcpSyncClients;
 
   ChatController(
       ChatModel chatModel,
@@ -33,17 +35,18 @@ class ChatController {
       DateTimeTools dateTimeTools,
       WeatherTools weatherTools,
       AirQualityTools airQualityTools,
-      Optional<SyncMcpToolCallbackProvider> toolCallbackProvider) {
+      List<McpSyncClient> mcpSyncClients) {
     this.chatModel = chatModel;
     this.chatMemory = chatMemory;
     this.dateTimeTools = dateTimeTools;
     this.weatherTools = weatherTools;
     this.airQualityTools = airQualityTools;
-    this.toolCallbackProvider = toolCallbackProvider;
+    this.mcpSyncClients = mcpSyncClients;
   }
 
   /** Example: GET /api/chat/simple?message=Hello */
   @GetMapping("/simple")
+  @Operation(summary = "Simple chat call")
   Response simpleChat(@RequestParam(name = "message") String message) {
     return ChatClient.create(chatModel).prompt(message).call().entity(Response.class);
   }
@@ -81,13 +84,11 @@ class ChatController {
   /** Example: GET /api/chat/mcp?content=Q1 sales reached 1M with 20% growth */
   @GetMapping("/mcp")
   Response chatWithMcpTools(@RequestParam(name = "content") String content) {
-    if (toolCallbackProvider.isEmpty()) {
-      return new Response("MCP tools are not available — start the MCP server and restart.");
-    }
     var prompt = "Generate a report with the following content: " + content;
+
     return ChatClient.create(chatModel)
         .prompt(prompt)
-        .tools(t -> t.callbacks(toolCallbackProvider.get()))
+        .tools(t -> t.callbacks(SyncMcpToolCallbackProvider.syncToolCallbacks(mcpSyncClients)))
         .call()
         .entity(Response.class);
   }

@@ -11,10 +11,15 @@ spring:
 
     mcp:
       client:
+        initialized: false
         streamable-http:
           connections:
-            server:
+            spring-ai-mcp:
               url: http://localhost:8081
 
 server:
   port: 8080
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html

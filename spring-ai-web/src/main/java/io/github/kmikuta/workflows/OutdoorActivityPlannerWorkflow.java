@@ -2,9 +2,13 @@ package io.github.kmikuta.workflows;
 
 import io.github.kmikuta.tools.AirQualityTools;
 import io.github.kmikuta.tools.WeatherTools;
-import java.util.concurrent.CompletableFuture;
+import io.github.kmikuta.utils.ModelCallObserver;
+import io.github.kmikuta.workflows.patterns.ParallelizationWorkflow;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.stereotype.Component;
@@ -19,16 +23,12 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class OutdoorActivityPlannerWorkflow {
+  private static final Logger LOGGER =
+      LoggerFactory.getLogger(OutdoorActivityPlannerWorkflow.class);
 
-  private static final String TEMPERATURE_PROMPT =
-      "Get the current temperature in Celsius for the following city:";
-
-  private static final String AIR_QUALITY_PROMPT =
-      "Get the current European Air Quality Index (AQI) for the following city:";
-
-  private static final String AGGREGATION_PROMPT =
+  private static final String SYSTEM_PROMPT =
       """
-      You are an outdoor activity planner. Based on the weather conditions provided, \
+      You are an outdoor activity planner. Collect weather and air quality conditions for {input} location and \
       recommend 3 outdoor activities suitable for those conditions.
 
       Guidelines:
@@ -41,65 +41,24 @@ public class OutdoorActivityPlannerWorkflow {
       - AQI above 60 (Poor or worse): only brief low-intensity outings; suggest indoor alternatives
 
       Present 3 recommendations with a short rationale that references the actual values.
-
-      Weather conditions:
       """;
 
-  private final ChatModel chatModel;
-  private final WeatherTools weatherTools;
-  private final AirQualityTools airQualityTools;
+  private final ChatClient chatClient;
 
   public OutdoorActivityPlannerWorkflow(
       ChatModel chatModel, WeatherTools weatherTools, AirQualityTools airQualityTools) {
-    this.chatModel = chatModel;
-    this.weatherTools = weatherTools;
-    this.airQualityTools = airQualityTools;
+    this.chatClient =
+        ChatClient.builder(chatModel).defaultTools(weatherTools, airQualityTools).build();
   }
 
-  public String execute(String city) {
-    ExecutorService executor = Executors.newFixedThreadPool(2);
-    try {
-      CompletableFuture<String> temperatureFuture = fetchTemperature(city, executor);
-      CompletableFuture<String> airQualityFuture = fetchAirQuality(city, executor);
-      CompletableFuture.allOf(temperatureFuture, airQualityFuture).join();
+  public List<String> execute(List<String> cities) {
+    try (ExecutorService executor = Executors.newFixedThreadPool(4)) {
+      ModelCallObserver callObserver = new ModelCallObserver();
+      callObserver.addObserver(input -> LOGGER.info("Executing prompt for input: {}", input));
 
-      String conditions = buildConditions(temperatureFuture.join(), airQualityFuture.join());
-
-      return ChatClient.builder(chatModel)
-          .build()
-          .prompt(AGGREGATION_PROMPT + conditions)
-          .call()
-          .content();
-    } finally {
-      executor.shutdown();
+      ParallelizationWorkflow workflow =
+          new ParallelizationWorkflow(chatClient, executor, callObserver);
+      return workflow.parallel(SYSTEM_PROMPT, cities);
     }
-  }
-
-  private String buildConditions(String temperature, String airQuality) {
-    return "Temperature: " + temperature + "\nAir Quality: " + airQuality;
-  }
-
-  private CompletableFuture<String> fetchTemperature(String city, ExecutorService executor) {
-    return CompletableFuture.supplyAsync(
-        () ->
-            ChatClient.builder(chatModel)
-                .build()
-                .prompt(TEMPERATURE_PROMPT + "\nInput: " + city)
-                .tools(weatherTools)
-                .call()
-                .content(),
-        executor);
-  }
-
-  private CompletableFuture<String> fetchAirQuality(String city, ExecutorService executor) {
-    return CompletableFuture.supplyAsync(
-        () ->
-            ChatClient.builder(chatModel)
-                .build()
-                .prompt(AIR_QUALITY_PROMPT + "\nInput: " + city)
-                .tools(airQualityTools)
-                .call()
-                .content(),
-        executor);
   }
 }

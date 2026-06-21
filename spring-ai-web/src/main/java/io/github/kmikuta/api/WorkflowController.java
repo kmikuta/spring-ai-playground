@@ -1,8 +1,10 @@
 package io.github.kmikuta.api;
 
 import io.github.kmikuta.workflows.LocationInfoWorkflow;
-import io.github.kmikuta.workflows.LocationOrActivityWorkflow;
 import io.github.kmikuta.workflows.OutdoorActivityPlannerWorkflow;
+import io.github.kmikuta.workflows.WeatherOrAirQualityWorkflow;
+import java.util.Arrays;
+import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -14,15 +16,15 @@ class WorkflowController {
 
   private final LocationInfoWorkflow locationInfoWorkflow;
   private final OutdoorActivityPlannerWorkflow outdoorActivityPlannerWorkflow;
-  private final LocationOrActivityWorkflow locationOrActivityWorkflow;
+  private final WeatherOrAirQualityWorkflow weatherOrAirQualityWorkflow;
 
   WorkflowController(
       LocationInfoWorkflow locationInfoWorkflow,
       OutdoorActivityPlannerWorkflow outdoorActivityPlannerWorkflow,
-      LocationOrActivityWorkflow locationOrActivityWorkflow) {
+      WeatherOrAirQualityWorkflow weatherOrAirQualityWorkflow) {
     this.locationInfoWorkflow = locationInfoWorkflow;
     this.outdoorActivityPlannerWorkflow = outdoorActivityPlannerWorkflow;
-    this.locationOrActivityWorkflow = locationOrActivityWorkflow;
+    this.weatherOrAirQualityWorkflow = weatherOrAirQualityWorkflow;
   }
 
   /** Example: GET /api/workflows/location?place=Tokyo */
@@ -31,19 +33,15 @@ class WorkflowController {
     return locationInfoWorkflow.execute(place);
   }
 
-  /** Example: GET /api/workflows/outdoor-activities?city=Warsaw */
-  @GetMapping("/outdoor-activities")
-  String outdoorActivities(@RequestParam(name = "city") String city) {
-    return outdoorActivityPlannerWorkflow.execute(city);
+  /** Example: GET /api/workflows/activities?cities=Warsaw,Tokyo */
+  @GetMapping("/activities")
+  List<String> outdoorActivities(@RequestParam String[] cities) {
+    return outdoorActivityPlannerWorkflow.execute(Arrays.asList(cities));
   }
 
-  /**
-   * Example (weather info): GET /api/workflows/location-or-activity?prompt=What is the weather in
-   * Tokyo Example (outdoor activities): GET /api/workflows/location-or-activity?prompt=Suggest
-   * outdoor activities in Warsaw
-   */
-  @GetMapping("/location-or-activity")
-  String locationOrActivity(@RequestParam(name = "prompt") String prompt) {
-    return locationOrActivityWorkflow.execute(prompt);
+  /** Example: GET /api/workflows/weather-or-air?prompt=What's the weather like in Warsaw */
+  @GetMapping("/weather-or-air")
+  String weatherOrAirQuality(@RequestParam String prompt) {
+    return weatherOrAirQualityWorkflow.execute(prompt);
   }
 }
