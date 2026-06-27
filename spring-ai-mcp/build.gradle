@@ -1,5 +1,28 @@
 plugins {
     id 'org.springframework.boot'
+    id 'jvm-test-suite'
+}
+
+testing {
+    suites {
+        test {
+            useJUnitJupiter()
+        }
+
+        e2eTest(JvmTestSuite) {
+            dependencies {
+                implementation project()
+            }
+
+            targets {
+                all {
+                    testTask.configure {
+                        shouldRunAfter(test)
+                    }
+                }
+            }
+        }
+    }
 }
 
 dependencies {
@@ -7,6 +30,9 @@ dependencies {
     implementation 'org.springframework.ai:spring-ai-starter-mcp-server-webmvc'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
-    testImplementation 'org.springframework.ai:spring-ai-starter-mcp-client'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    e2eTestImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+    e2eTestImplementation 'org.springframework.ai:spring-ai-starter-mcp-client'
+    e2eTestRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }

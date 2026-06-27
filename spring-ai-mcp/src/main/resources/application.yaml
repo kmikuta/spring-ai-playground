@@ -1,11 +1,12 @@
 spring:
   application:
     name: spring-ai-mcp
+
   ai:
     mcp:
       server:
         name: Spring AI Playground MCP
-        protocol: STREAMABLE
+        protocol: STATELESS
 
 server:
   port: 8081

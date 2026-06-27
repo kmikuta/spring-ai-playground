@@ -1,0 +1,10 @@
+spring:
+  ai:
+    mcp:
+      client:
+        initialized: false
+        streamable-http:
+          connections:
+            spring_ai_playground:
+              url: http://localhost:8081
+              endpoint: /mcp

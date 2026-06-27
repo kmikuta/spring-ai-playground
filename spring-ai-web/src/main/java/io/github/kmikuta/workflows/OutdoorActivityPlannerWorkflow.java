@@ -1,7 +1,5 @@
 package io.github.kmikuta.workflows;
 
-import io.github.kmikuta.tools.AirQualityTools;
-import io.github.kmikuta.tools.WeatherTools;
 import io.github.kmikuta.utils.ModelCallObserver;
 import io.github.kmikuta.workflows.patterns.ParallelizationWorkflow;
 import java.util.List;
@@ -10,7 +8,6 @@ import java.util.concurrent.Executors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.stereotype.Component;
 
 /**
@@ -45,10 +42,8 @@ public class OutdoorActivityPlannerWorkflow {
 
   private final ChatClient chatClient;
 
-  public OutdoorActivityPlannerWorkflow(
-      ChatModel chatModel, WeatherTools weatherTools, AirQualityTools airQualityTools) {
-    this.chatClient =
-        ChatClient.builder(chatModel).defaultTools(weatherTools, airQualityTools).build();
+  public OutdoorActivityPlannerWorkflow(ChatClient chatClient) {
+    this.chatClient = chatClient;
   }
 
   public List<String> execute(List<String> cities) {

@@ -1,14 +1,11 @@
 package io.github.kmikuta.workflows;
 
-import io.github.kmikuta.tools.AirQualityTools;
-import io.github.kmikuta.tools.WeatherTools;
 import io.github.kmikuta.utils.ModelCallObserver;
 import io.github.kmikuta.workflows.patterns.RoutingWorkflow;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.stereotype.Component;
 
 /**
@@ -48,10 +45,8 @@ public class WeatherOrAirQualityWorkflow {
 
   private final ChatClient chatClient;
 
-  public WeatherOrAirQualityWorkflow(
-      ChatModel chatModel, WeatherTools weatherTools, AirQualityTools airQualityTools) {
-    this.chatClient =
-        ChatClient.builder(chatModel).defaultTools(weatherTools, airQualityTools).build();
+  public WeatherOrAirQualityWorkflow(ChatClient chatClient) {
+    this.chatClient = chatClient;
   }
 
   public String execute(String prompt) {
