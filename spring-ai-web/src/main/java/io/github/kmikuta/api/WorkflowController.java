@@ -1,5 +1,6 @@
 package io.github.kmikuta.api;
 
+import io.github.kmikuta.workflows.GeneralPlannerWorkflow;
 import io.github.kmikuta.workflows.LocationInfoWorkflow;
 import io.github.kmikuta.workflows.OutdoorActivityPlannerWorkflow;
 import io.github.kmikuta.workflows.WeatherOrAirQualityWorkflow;
@@ -17,14 +18,17 @@ class WorkflowController {
   private final LocationInfoWorkflow locationInfoWorkflow;
   private final OutdoorActivityPlannerWorkflow outdoorActivityPlannerWorkflow;
   private final WeatherOrAirQualityWorkflow weatherOrAirQualityWorkflow;
+  private final GeneralPlannerWorkflow generalPlannerWorkflow;
 
   WorkflowController(
       LocationInfoWorkflow locationInfoWorkflow,
       OutdoorActivityPlannerWorkflow outdoorActivityPlannerWorkflow,
-      WeatherOrAirQualityWorkflow weatherOrAirQualityWorkflow) {
+      WeatherOrAirQualityWorkflow weatherOrAirQualityWorkflow,
+      GeneralPlannerWorkflow generalPlannerWorkflow) {
     this.locationInfoWorkflow = locationInfoWorkflow;
     this.outdoorActivityPlannerWorkflow = outdoorActivityPlannerWorkflow;
     this.weatherOrAirQualityWorkflow = weatherOrAirQualityWorkflow;
+    this.generalPlannerWorkflow = generalPlannerWorkflow;
   }
 
   /** Example: GET /api/workflows/location?place=Tokyo */
@@ -43,5 +47,15 @@ class WorkflowController {
   @GetMapping("/weather-or-air")
   String weatherOrAirQuality(@RequestParam String prompt) {
     return weatherOrAirQualityWorkflow.execute(prompt);
+  }
+
+  /**
+   * Example1: GET /api/workflows/general-planner?prompt=Plan outdoor activities in Lausanne. I'm
+   * into water sports and hiking. Example2: GET /api/workflows/general-planner?prompt=Can I go
+   * hiking now?
+   */
+  @GetMapping("/planner")
+  String generalPlanner(@RequestParam String prompt) {
+    return generalPlannerWorkflow.execute(prompt);
   }
 }
